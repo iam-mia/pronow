@@ -27,10 +27,14 @@ class PronunciationPracticeScreen extends StatefulWidget {
 }
 
 class _PronunciationPracticeScreenState
-    extends State<PronunciationPracticeScreen> {
+    extends State<PronunciationPracticeScreen>
+    with SingleTickerProviderStateMixin {
   late final TextEditingController _inputController;
   late final AudioRecorder _audioRecorder;
   late final AudioPlayer _audioPlayer;
+
+  late final AnimationController _pulseController;
+  late final Animation<double> _pulseAnimation;
 
   late String _referenceText;
   late String _ipaTranscription;
@@ -63,6 +67,14 @@ class _PronunciationPracticeScreenState
     _audioRecorder = AudioRecorder();
     _audioPlayer = AudioPlayer();
 
+    _pulseController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1000),
+    );
+    _pulseAnimation = Tween<double>(begin: 1.0, end: 1.12).animate(
+      CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
+    );
+
     _audioPlayer.onPlayerComplete.listen((_) {
       if (mounted) setState(() => _isPlayingTts = false);
     });
@@ -78,6 +90,7 @@ class _PronunciationPracticeScreenState
         _inputController.text = widget.initialSentence;
         _result = null;
         _selectedPhoneme = null;
+        _statusMessage = null;
         _isSavedToNotebook = false;
       });
     }
@@ -85,6 +98,7 @@ class _PronunciationPracticeScreenState
 
   @override
   void dispose() {
+    _pulseController.dispose();
     _inputController.dispose();
     _audioRecorder.dispose();
     _audioPlayer.dispose();
@@ -157,6 +171,10 @@ class _PronunciationPracticeScreenState
         _isAnalyzing = true;
         _statusMessage = "Đang phân tích âm học và so khớp âm vị...";
       });
+      if (_pulseController.isAnimating) {
+        _pulseController.stop();
+        _pulseController.reset();
+      }
 
       Uint8List? audioBytes;
       try {
@@ -182,7 +200,8 @@ class _PronunciationPracticeScreenState
       if (audioBytes == null || audioBytes.length < 400) {
         setState(() {
           _isAnalyzing = false;
-          _statusMessage = "Không nhận được tín hiệu âm thanh từ micro. Vui lòng nói to hơn.";
+          _statusMessage =
+              "Không nhận được tín hiệu âm thanh từ micro. Vui lòng nói to hơn.";
         });
         return;
       }
@@ -228,7 +247,8 @@ class _PronunciationPracticeScreenState
         final hasPermission = await _audioRecorder.hasPermission();
         if (!hasPermission) {
           setState(() {
-            _statusMessage = "Vui lòng cấp quyền micro trong trình duyệt/thiết bị để luyện nói.";
+            _statusMessage =
+                "Vui lòng cấp quyền micro trong trình duyệt/thiết bị để luyện nói.";
           });
           return;
         }
@@ -246,7 +266,12 @@ class _PronunciationPracticeScreenState
           _result = null;
           _selectedPhoneme = null;
         });
+        _pulseController.repeat(reverse: true);
       } catch (e) {
+        if (_pulseController.isAnimating) {
+          _pulseController.stop();
+          _pulseController.reset();
+        }
         setState(() {
           _statusMessage = "Không thể bật micro: $e";
         });
@@ -266,6 +291,235 @@ class _PronunciationPracticeScreenState
     return NotionColors.tagRedBg;
   }
 
+  Widget _buildSoundWaveBars() {
+    return AnimatedBuilder(
+      animation: _pulseAnimation,
+      builder: (context, child) {
+        final t = (_pulseAnimation.value - 1.0) / 0.12;
+        final heights = [
+          8.0 + 6.0 * t,
+          16.0 - 8.0 * t,
+          10.0 + 8.0 * t,
+          18.0 - 6.0 * t,
+          9.0 + 7.0 * t,
+        ];
+        return Row(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: List.generate(heights.length, (i) {
+            return Container(
+              margin: const EdgeInsets.symmetric(horizontal: 1.5),
+              width: 3,
+              height: heights[i],
+              decoration: BoxDecoration(
+                color: NotionColors.tagRedText,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            );
+          }),
+        );
+      },
+    );
+  }
+
+  Widget _buildRecordingIndicator() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      decoration: BoxDecoration(
+        color: NotionColors.tagRedBg,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: NotionColors.tagRedText.withAlpha(90)),
+      ),
+      child: Column(
+        children: [
+          Wrap(
+            spacing: 8,
+            runSpacing: 4,
+            alignment: WrapAlignment.center,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: [
+              Container(
+                width: 8,
+                height: 8,
+                decoration: const BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: NotionColors.tagRedText,
+                ),
+              ),
+              Text(
+                'Đang ghi âm giọng đọc...',
+                style: GoogleFonts.inter(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                  color: NotionColors.tagRedText,
+                ),
+              ),
+              _buildSoundWaveBars(),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Hãy đọc to, rõ ràng theo câu mẫu. Bấm nút dừng để chấm điểm.',
+            style: GoogleFonts.inter(
+              fontSize: 11,
+              color: NotionColors.tagRedText.withAlpha(220),
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAnalyzingIndicator() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      decoration: BoxDecoration(
+        color: NotionColors.tagAmberBg,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: NotionColors.tagAmberText.withAlpha(90)),
+      ),
+      child: Column(
+        children: [
+          Wrap(
+            spacing: 8,
+            runSpacing: 4,
+            alignment: WrapAlignment.center,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: [
+              const SizedBox(
+                width: 16,
+                height: 16,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: NotionColors.tagAmberText,
+                ),
+              ),
+              Text(
+                'Đang phân tích âm học và so khớp âm vị...',
+                style: GoogleFonts.inter(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                  color: NotionColors.tagAmberText,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Text(
+            'AI đang đối chiếu phổ âm thanh của bạn với chuẩn ngữ âm IPA...',
+            style: GoogleFonts.inter(
+              fontSize: 11,
+              color: NotionColors.tagAmberText.withAlpha(220),
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 10),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(3),
+            child: const LinearProgressIndicator(
+              minHeight: 4,
+              backgroundColor: NotionColors.surface,
+              color: NotionColors.tagAmberText,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatusMessageCard() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: NotionColors.tagRedBg,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: NotionColors.tagRedText.withAlpha(90)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Icon(
+            Icons.error_outline_rounded,
+            size: 18,
+            color: NotionColors.tagRedText,
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Thông báo',
+                  style: GoogleFonts.inter(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    color: NotionColors.tagRedText,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  _statusMessage!,
+                  style: GoogleFonts.inter(
+                    fontSize: 12,
+                    color: NotionColors.tagRedText,
+                    height: 1.35,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          MouseRegion(
+            cursor: SystemMouseCursors.click,
+            child: GestureDetector(
+              onTap: () => setState(() => _statusMessage = null),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: NotionColors.surface,
+                  borderRadius: BorderRadius.circular(4),
+                  border:
+                      Border.all(color: NotionColors.tagRedText.withAlpha(60)),
+                ),
+                child: Text(
+                  'Đóng',
+                  style: GoogleFonts.inter(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    color: NotionColors.tagRedText,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMetricPill(String label, String value) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: NotionColors.surfaceSubtle,
+        borderRadius: BorderRadius.circular(4),
+        border: Border.all(color: NotionColors.borderSubtle),
+      ),
+      child: Text(
+        '$label: $value',
+        style: GoogleFonts.inter(
+          fontSize: 11,
+          fontWeight: FontWeight.w600,
+          color: NotionColors.textMuted,
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -279,24 +533,22 @@ class _PronunciationPracticeScreenState
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  // 1. Compact Header
+                  // 1. Compact Responsive Header
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Row(
-                        children: [
-                          const Text('🎙️', style: TextStyle(fontSize: 20)),
-                          const SizedBox(width: 8),
-                          Text(
-                            'Luyện Phát Âm Tự Do',
-                            style: GoogleFonts.inter(
-                              fontSize: 17,
-                              fontWeight: FontWeight.w700,
-                              color: NotionColors.textMain,
-                            ),
+                      const Text('🎙️', style: TextStyle(fontSize: 20)),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'Luyện Phát Âm Tự Do',
+                          style: GoogleFonts.inter(
+                            fontSize: 17,
+                            fontWeight: FontWeight.w700,
+                            color: NotionColors.textMain,
                           ),
-                        ],
+                        ),
                       ),
+                      const SizedBox(width: 8),
                       Container(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 8,
@@ -320,7 +572,7 @@ class _PronunciationPracticeScreenState
                   ),
                   const SizedBox(height: 12),
 
-                  // 2. Compact Input Bar & Chips
+                  // 2. Input Bar & Suggested Chips
                   Container(
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
@@ -439,7 +691,7 @@ class _PronunciationPracticeScreenState
                                         border: Border.all(
                                           color: isSelected
                                               ? NotionColors.tagBlueText
-                                                    .withAlpha(150)
+                                                  .withAlpha(150)
                                               : NotionColors.borderSubtle,
                                         ),
                                       ),
@@ -464,7 +716,7 @@ class _PronunciationPracticeScreenState
                   ),
                   const SizedBox(height: 12),
 
-                  // 3. Central Target Sentence Card with TTS & Bookmark
+                  // 3. Central Target Sentence Card with Responsive Actions
                   Container(
                     padding: const EdgeInsets.all(14),
                     decoration: BoxDecoration(
@@ -475,8 +727,11 @@ class _PronunciationPracticeScreenState
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 6,
+                          alignment: WrapAlignment.spaceBetween,
+                          crossAxisAlignment: WrapCrossAlignment.center,
                           children: [
                             Text(
                               'CÂU MỤC TIÊU',
@@ -487,7 +742,9 @@ class _PronunciationPracticeScreenState
                                 letterSpacing: 0.8,
                               ),
                             ),
-                            Row(
+                            Wrap(
+                              spacing: 6,
+                              runSpacing: 4,
                               children: [
                                 // Bookmark Button
                                 MouseRegion(
@@ -538,7 +795,6 @@ class _PronunciationPracticeScreenState
                                     ),
                                   ),
                                 ),
-                                const SizedBox(width: 8),
 
                                 // Listen TTS Button
                                 MouseRegion(
@@ -566,10 +822,10 @@ class _PronunciationPracticeScreenState
                                                   height: 10,
                                                   child:
                                                       CircularProgressIndicator(
-                                                        strokeWidth: 1.5,
-                                                        color: NotionColors
-                                                            .textMain,
-                                                      ),
+                                                    strokeWidth: 1.5,
+                                                    color:
+                                                        NotionColors.textMain,
+                                                  ),
                                                 )
                                               : const Icon(
                                                   Icons.volume_up_rounded,
@@ -603,7 +859,7 @@ class _PronunciationPracticeScreenState
                             fontSize: 17,
                             fontWeight: FontWeight.w600,
                             color: NotionColors.textMain,
-                            height: 1.3,
+                            height: 1.35,
                           ),
                         ),
                         const SizedBox(height: 4),
@@ -619,143 +875,193 @@ class _PronunciationPracticeScreenState
                   ),
                   const SizedBox(height: 12),
 
-                  // 4. Central Microphone Control (Compact & In-View)
+                  // 4. Central Microphone Control with Clear State Visuals
                   Center(
                     child: Column(
                       children: [
-                        MouseRegion(
-                          cursor: SystemMouseCursors.click,
-                          child: GestureDetector(
-                            onTap: _isAnalyzing ? null : _toggleRecording,
-                            child: AnimatedContainer(
-                              duration: const Duration(milliseconds: 200),
-                              width: 64,
-                              height: 64,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: _isRecording
-                                    ? NotionColors.tagRedBg
-                                    : (_isAnalyzing
-                                          ? NotionColors.tagAmberBg
-                                          : NotionColors.textMain),
-                                border: Border.all(
-                                  color: _isRecording
-                                      ? NotionColors.tagRedText
-                                      : NotionColors.border,
-                                  width: _isRecording ? 3 : 1,
+                        Semantics(
+                          button: true,
+                          label: _isRecording
+                              ? 'Dừng thu âm và chấm điểm'
+                              : (_isAnalyzing
+                                  ? 'Đang phân tích'
+                                  : 'Bắt đầu thu âm phát âm'),
+                          child: MouseRegion(
+                            cursor: _isAnalyzing
+                                ? SystemMouseCursors.basic
+                                : SystemMouseCursors.click,
+                            child: GestureDetector(
+                              onTap: _isAnalyzing ? null : _toggleRecording,
+                              child: AnimatedBuilder(
+                                animation: _pulseAnimation,
+                                builder: (context, child) {
+                                  final scale = _isRecording
+                                      ? _pulseAnimation.value
+                                      : 1.0;
+                                  return Transform.scale(
+                                    scale: scale,
+                                    child: child,
+                                  );
+                                },
+                                child: AnimatedContainer(
+                                  duration: const Duration(milliseconds: 200),
+                                  width: 72,
+                                  height: 72,
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    color: _isRecording
+                                        ? NotionColors.tagRedBg
+                                        : (_isAnalyzing
+                                            ? NotionColors.tagAmberBg
+                                            : NotionColors.textMain),
+                                    border: Border.all(
+                                      color: _isRecording
+                                          ? NotionColors.tagRedText
+                                          : (_isAnalyzing
+                                              ? NotionColors.tagAmberText
+                                              : NotionColors.border),
+                                      width: _isRecording ? 3 : 1.5,
+                                    ),
+                                    boxShadow: _isRecording
+                                        ? [
+                                            BoxShadow(
+                                              color: NotionColors.tagRedText
+                                                  .withAlpha(90),
+                                              blurRadius: 18,
+                                              spreadRadius: 3,
+                                            ),
+                                          ]
+                                        : [
+                                            BoxShadow(
+                                              color:
+                                                  Colors.black.withAlpha(12),
+                                              blurRadius: 8,
+                                              offset: const Offset(0, 3),
+                                            ),
+                                          ],
+                                  ),
+                                  child: Center(
+                                    child: _isAnalyzing
+                                        ? const SizedBox(
+                                            width: 28,
+                                            height: 28,
+                                            child: CircularProgressIndicator(
+                                              strokeWidth: 2.5,
+                                              color: NotionColors.tagAmberText,
+                                            ),
+                                          )
+                                        : Icon(
+                                            _isRecording
+                                                ? Icons.stop_rounded
+                                                : Icons.mic_rounded,
+                                            size: 32,
+                                            color: _isRecording
+                                                ? NotionColors.tagRedText
+                                                : Colors.white,
+                                          ),
+                                  ),
                                 ),
-                                boxShadow: _isRecording
-                                    ? [
-                                        BoxShadow(
-                                          color: NotionColors.tagRedText
-                                              .withAlpha(80),
-                                          blurRadius: 16,
-                                          spreadRadius: 2,
-                                        ),
-                                      ]
-                                    : [],
-                              ),
-                              child: Center(
-                                child: _isAnalyzing
-                                    ? const SizedBox(
-                                        width: 24,
-                                        height: 24,
-                                        child: CircularProgressIndicator(
-                                          strokeWidth: 2,
-                                          color: NotionColors.tagAmberText,
-                                        ),
-                                      )
-                                    : Icon(
-                                        _isRecording
-                                            ? Icons.stop_rounded
-                                            : Icons.mic_rounded,
-                                        size: 28,
-                                        color: _isRecording
-                                            ? NotionColors.tagRedText
-                                            : Colors.white,
-                                      ),
                               ),
                             ),
                           ),
                         ),
-                        const SizedBox(height: 6),
+                        const SizedBox(height: 8),
                         Text(
                           _isRecording
-                              ? 'Đang thu âm... Bấm để dừng & chấm'
+                              ? 'Đang thu âm... Chạm để dừng & chấm'
                               : (_isAnalyzing
-                                    ? 'Đang phân tích phát âm...'
-                                    : 'Chạm micro để luyện nói'),
+                                  ? 'Đang chấm điểm phát âm...'
+                                  : 'Chạm micro để luyện nói'),
                           style: GoogleFonts.inter(
-                            fontSize: 12,
-                            fontWeight: _isRecording
-                                ? FontWeight.w600
-                                : FontWeight.w400,
+                            fontSize: 13,
+                            fontWeight: _isRecording || _isAnalyzing
+                                ? FontWeight.w700
+                                : FontWeight.w600,
                             color: _isRecording
                                 ? NotionColors.tagRedText
-                                : NotionColors.textMuted,
+                                : (_isAnalyzing
+                                    ? NotionColors.tagAmberText
+                                    : NotionColors.textMain),
                           ),
+                          textAlign: TextAlign.center,
                         ),
+                        if (!_isRecording && !_isAnalyzing) ...[
+                          const SizedBox(height: 2),
+                          Text(
+                            'Nói to, rõ ràng theo câu mẫu trên',
+                            style: GoogleFonts.inter(
+                              fontSize: 11,
+                              color: NotionColors.textMuted,
+                            ),
+                          ),
+                        ],
                       ],
                     ),
                   ),
 
-                  if (_statusMessage != null && !_isAnalyzing) ...[
-                    const SizedBox(height: 8),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 6,
-                      ),
-                      decoration: BoxDecoration(
-                        color: NotionColors.tagAmberBg,
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      child: Text(
-                        _statusMessage!,
-                        style: GoogleFonts.inter(
-                          fontSize: 11,
-                          color: NotionColors.tagAmberText,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
+                  // State Cards: Recording, Analyzing, or Error
+                  if (_isRecording) ...[
+                    const SizedBox(height: 10),
+                    _buildRecordingIndicator(),
+                  ] else if (_isAnalyzing) ...[
+                    const SizedBox(height: 10),
+                    _buildAnalyzingIndicator(),
+                  ] else if (_statusMessage != null) ...[
+                    const SizedBox(height: 10),
+                    _buildStatusMessageCard(),
                   ],
 
-                  // 5. In-View Assessment Results (Zero-Scroll Display)
+                  // 5. In-View Assessment Results
                   if (_result != null) ...[
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 14),
                     Container(
-                      padding: const EdgeInsets.all(12),
+                      padding: const EdgeInsets.all(14),
                       decoration: BoxDecoration(
                         color: NotionColors.surface,
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(10),
                         border: Border.all(color: NotionColors.border),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withAlpha(8),
+                            blurRadius: 10,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          // Score Header Row
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          // Score Header Row (Wrap for narrow screens)
+                          Wrap(
+                            spacing: 10,
+                            runSpacing: 8,
+                            alignment: WrapAlignment.spaceBetween,
+                            crossAxisAlignment: WrapCrossAlignment.center,
                             children: [
                               Row(
+                                mainAxisSize: MainAxisSize.min,
                                 children: [
                                   Container(
                                     padding: const EdgeInsets.symmetric(
-                                      horizontal: 10,
-                                      vertical: 4,
+                                      horizontal: 12,
+                                      vertical: 6,
                                     ),
                                     decoration: BoxDecoration(
                                       color: _getScoreBgColor(
                                         _result!.overallScore,
                                       ),
-                                      borderRadius: BorderRadius.circular(6),
+                                      borderRadius: BorderRadius.circular(8),
+                                      border: Border.all(
+                                        color: _getScoreColor(
+                                          _result!.overallScore,
+                                        ).withAlpha(80),
+                                      ),
                                     ),
                                     child: Text(
                                       '${_result!.overallScore.toStringAsFixed(0)} / 100',
                                       style: GoogleFonts.inter(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.w700,
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.w800,
                                         color: _getScoreColor(
                                           _result!.overallScore,
                                         ),
@@ -766,10 +1072,12 @@ class _PronunciationPracticeScreenState
                                   Text(
                                     _result!.overallScore >= 80
                                         ? '🎉 Phát âm rất chuẩn!'
-                                        : 'Cần chú ý âm cuối/âm vị tô đỏ',
+                                        : (_result!.overallScore >= 50
+                                            ? '⚠️ Cần cải thiện âm tô đỏ'
+                                            : '❌ Hãy luyện lại kỹ hơn'),
                                     style: GoogleFonts.inter(
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w600,
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w700,
                                       color: _getScoreColor(
                                         _result!.overallScore,
                                       ),
@@ -777,21 +1085,61 @@ class _PronunciationPracticeScreenState
                                   ),
                                 ],
                               ),
+                              Wrap(
+                                spacing: 6,
+                                runSpacing: 4,
+                                children: [
+                                  _buildMetricPill(
+                                    'Chuẩn xác',
+                                    '${_result!.accuracyScore.toStringAsFixed(0)}%',
+                                  ),
+                                  _buildMetricPill(
+                                    'Lưu loát',
+                                    '${_result!.fluencyScore.toStringAsFixed(0)}%',
+                                  ),
+                                  _buildMetricPill(
+                                    'Đầy đủ',
+                                    '${_result!.completenessScore.toStringAsFixed(0)}%',
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                          const Divider(
+                            height: 1,
+                            color: NotionColors.borderSubtle,
+                          ),
+                          const SizedBox(height: 10),
+
+                          // Section header for phonemes
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
                               Text(
-                                'Độ chính xác: ${_result!.accuracyScore.toStringAsFixed(0)}%',
+                                'CHI TIẾT TỪNG ÂM TIẾT',
                                 style: GoogleFonts.inter(
                                   fontSize: 11,
+                                  fontWeight: FontWeight.w700,
                                   color: NotionColors.textMuted,
+                                  letterSpacing: 0.6,
+                                ),
+                              ),
+                              Text(
+                                'Chạm âm vị để xem góp ý',
+                                style: GoogleFonts.inter(
+                                  fontSize: 10,
+                                  color: NotionColors.textTertiary,
                                 ),
                               ),
                             ],
                           ),
-                          const SizedBox(height: 10),
+                          const SizedBox(height: 8),
 
                           // Words & Phonemes Visualizer
                           Wrap(
                             spacing: 8,
-                            runSpacing: 6,
+                            runSpacing: 8,
                             children: _result!.words.map((w) {
                               final wColor = _getScoreColor(w.accuracyScore);
                               final wBg = _getScoreBgColor(w.accuracyScore);
@@ -799,64 +1147,82 @@ class _PronunciationPracticeScreenState
                               return Container(
                                 padding: const EdgeInsets.symmetric(
                                   horizontal: 8,
-                                  vertical: 4,
+                                  vertical: 6,
                                 ),
                                 decoration: BoxDecoration(
                                   color: wBg,
                                   borderRadius: BorderRadius.circular(6),
                                   border: Border.all(
-                                    color: wColor.withAlpha(80),
+                                    color: wColor.withAlpha(90),
                                   ),
                                 ),
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.center,
+                                  mainAxisSize: MainAxisSize.min,
                                   children: [
                                     Text(
                                       w.word,
                                       style: GoogleFonts.inter(
                                         fontSize: 13,
-                                        fontWeight: FontWeight.w600,
+                                        fontWeight: FontWeight.w700,
                                         color: wColor,
                                       ),
                                     ),
-                                    const SizedBox(height: 2),
-                                    Row(
-                                      mainAxisSize: MainAxisSize.min,
+                                    const SizedBox(height: 4),
+                                    Wrap(
+                                      spacing: 2,
+                                      runSpacing: 2,
+                                      alignment: WrapAlignment.center,
                                       children: w.phonemes.map((p) {
                                         final isWeak =
-                                            !p.isCorrect ||
-                                            p.accuracyScore < 70;
-                                        return MouseRegion(
-                                          cursor: SystemMouseCursors.click,
-                                          child: GestureDetector(
-                                            onTap: () => setState(
-                                              () => _selectedPhoneme = p,
-                                            ),
-                                            child: Container(
-                                              margin:
-                                                  const EdgeInsets.symmetric(
-                                                    horizontal: 1,
+                                            !p.isCorrect || p.accuracyScore < 70;
+                                        final isSelected =
+                                            (_selectedPhoneme == p);
+                                        return Tooltip(
+                                          message:
+                                              'Âm /${p.symbol}/: ${p.accuracyScore.toStringAsFixed(0)}%',
+                                          child: MouseRegion(
+                                            cursor: SystemMouseCursors.click,
+                                            child: GestureDetector(
+                                              onTap: () => setState(() {
+                                                _selectedPhoneme =
+                                                    (isSelected ? null : p);
+                                              }),
+                                              child: AnimatedContainer(
+                                                duration: const Duration(
+                                                  milliseconds: 150,
+                                                ),
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                  horizontal: 4,
+                                                  vertical: 2,
+                                                ),
+                                                decoration: BoxDecoration(
+                                                  color: isSelected
+                                                      ? NotionColors.textMain
+                                                      : (isWeak
+                                                          ? NotionColors
+                                                              .tagRedText
+                                                          : Colors.transparent),
+                                                  borderRadius:
+                                                      BorderRadius.circular(3),
+                                                  border: isSelected
+                                                      ? Border.all(
+                                                          color: NotionColors
+                                                              .textMain,
+                                                          width: 1.5,
+                                                        )
+                                                      : null,
+                                                ),
+                                                child: Text(
+                                                  p.symbol,
+                                                  style: GoogleFonts.robotoMono(
+                                                    fontSize: 10,
+                                                    fontWeight: FontWeight.w700,
+                                                    color: (isSelected || isWeak)
+                                                        ? Colors.white
+                                                        : wColor,
                                                   ),
-                                              padding:
-                                                  const EdgeInsets.symmetric(
-                                                    horizontal: 3,
-                                                    vertical: 1,
-                                                  ),
-                                              decoration: BoxDecoration(
-                                                color: isWeak
-                                                    ? NotionColors.tagRedText
-                                                    : Colors.transparent,
-                                                borderRadius:
-                                                    BorderRadius.circular(2),
-                                              ),
-                                              child: Text(
-                                                p.symbol,
-                                                style: GoogleFonts.robotoMono(
-                                                  fontSize: 10,
-                                                  fontWeight: FontWeight.w600,
-                                                  color: isWeak
-                                                      ? Colors.white
-                                                      : wColor,
                                                 ),
                                               ),
                                             ),
@@ -870,44 +1236,134 @@ class _PronunciationPracticeScreenState
                             }).toList(),
                           ),
 
-                          // Selected Phoneme Guidance
-                          if (_selectedPhoneme != null &&
-                              _selectedPhoneme!.feedback != null) ...[
+                          // Selected Phoneme Guidance Box
+                          if (_selectedPhoneme != null) ...[
                             const SizedBox(height: 10),
                             Container(
                               width: double.infinity,
-                              padding: const EdgeInsets.all(8),
+                              padding: const EdgeInsets.all(10),
                               decoration: BoxDecoration(
                                 color: NotionColors.surfaceSubtle,
                                 borderRadius: BorderRadius.circular(6),
                                 border: Border.all(
-                                  color: NotionColors.borderSubtle,
+                                  color: NotionColors.border,
                                 ),
                               ),
                               child: Row(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  const Text(
-                                    '🔍',
-                                    style: TextStyle(fontSize: 14),
-                                  ),
-                                  const SizedBox(width: 6),
-                                  Expanded(
-                                    child: Text(
-                                      'Âm /${_selectedPhoneme!.symbol}/: ${_selectedPhoneme!.feedback!}',
-                                      style: GoogleFonts.inter(
-                                        fontSize: 11,
-                                        color: NotionColors.textMain,
-                                        height: 1.4,
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 6,
+                                      vertical: 2,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: _getScoreBgColor(
+                                        _selectedPhoneme!.accuracyScore,
                                       ),
+                                      borderRadius: BorderRadius.circular(4),
+                                      border: Border.all(
+                                        color: _getScoreColor(
+                                          _selectedPhoneme!.accuracyScore,
+                                        ).withAlpha(120),
+                                      ),
+                                    ),
+                                    child: Text(
+                                      '/${_selectedPhoneme!.symbol}/',
+                                      style: GoogleFonts.robotoMono(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w700,
+                                        color: _getScoreColor(
+                                          _selectedPhoneme!.accuracyScore,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.spaceBetween,
+                                          children: [
+                                            Text(
+                                              'Điểm âm vị: ${_selectedPhoneme!.accuracyScore.toStringAsFixed(0)}%',
+                                              style: GoogleFonts.inter(
+                                                fontSize: 11,
+                                                fontWeight: FontWeight.w700,
+                                                color: _getScoreColor(
+                                                  _selectedPhoneme!
+                                                      .accuracyScore,
+                                                ),
+                                              ),
+                                            ),
+                                            GestureDetector(
+                                              onTap: () => setState(
+                                                () => _selectedPhoneme = null,
+                                              ),
+                                              child: const Icon(
+                                                Icons.close_rounded,
+                                                size: 14,
+                                                color: NotionColors.textMuted,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                        const SizedBox(height: 2),
+                                        Text(
+                                          _selectedPhoneme!.feedback ??
+                                              (_selectedPhoneme!.accuracyScore >=
+                                                      70
+                                                  ? 'Âm này bạn phát âm rất chuẩn!'
+                                                  : 'Âm này phát âm chưa chuẩn, cần chú ý khẩu hình.'),
+                                          style: GoogleFonts.inter(
+                                            fontSize: 12,
+                                            color: NotionColors.textMain,
+                                            height: 1.35,
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                   ),
                                 ],
                               ),
                             ),
                           ],
-                          const SizedBox(height: 12),
+
+                          const SizedBox(height: 14),
                           _buildRecommendations(),
+
+                          // Re-practice Quick Action Button
+                          const SizedBox(height: 12),
+                          Center(
+                            child: OutlinedButton.icon(
+                              style: OutlinedButton.styleFrom(
+                                foregroundColor: NotionColors.textMain,
+                                side: const BorderSide(
+                                  color: NotionColors.border,
+                                ),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 10,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                              ),
+                              onPressed: _isAnalyzing ? null : _toggleRecording,
+                              icon: const Icon(Icons.refresh_rounded, size: 16),
+                              label: Text(
+                                'Thu âm luyện lại',
+                                style: GoogleFonts.inter(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          ),
                         ],
                       ),
                     ),
@@ -925,23 +1381,33 @@ class _PronunciationPracticeScreenState
     final recommendations = _result!.recommendations;
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(10),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: NotionColors.surfaceSubtle,
-        borderRadius: BorderRadius.circular(6),
+        borderRadius: BorderRadius.circular(8),
         border: Border.all(color: NotionColors.borderSubtle),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'BÀI TẬP NÊN LUYỆN',
-            style: GoogleFonts.inter(
-              fontSize: 11,
-              fontWeight: FontWeight.w700,
-              color: NotionColors.textMuted,
-              letterSpacing: 0.5,
-            ),
+          Row(
+            children: [
+              const Icon(
+                Icons.school_outlined,
+                size: 15,
+                color: NotionColors.textMuted,
+              ),
+              const SizedBox(width: 6),
+              Text(
+                'BÀI TẬP NÊN LUYỆN THÊM',
+                style: GoogleFonts.inter(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                  color: NotionColors.textMuted,
+                  letterSpacing: 0.5,
+                ),
+              ),
+            ],
           ),
           const SizedBox(height: 8),
           if (recommendations.isEmpty)
@@ -954,8 +1420,14 @@ class _PronunciationPracticeScreenState
             )
           else
             ...recommendations.map(
-              (drill) => Padding(
-                padding: const EdgeInsets.only(bottom: 8),
+              (drill) => Container(
+                margin: const EdgeInsets.only(bottom: 8),
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: NotionColors.surface,
+                  borderRadius: BorderRadius.circular(6),
+                  border: Border.all(color: NotionColors.borderSubtle),
+                ),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -967,28 +1439,60 @@ class _PronunciationPracticeScreenState
                             drill.drillTitle,
                             style: GoogleFonts.inter(
                               fontSize: 12,
-                              fontWeight: FontWeight.w600,
+                              fontWeight: FontWeight.w700,
                               color: NotionColors.textMain,
                             ),
                           ),
                           const SizedBox(height: 3),
                           Text(
-                            '${drill.practiceWords.join(' · ')}\n${drill.mouthGuidance}',
+                            'Từ luyện: ${drill.practiceWords.join(' · ')}',
                             style: GoogleFonts.inter(
                               fontSize: 11,
+                              fontWeight: FontWeight.w500,
                               color: NotionColors.textMuted,
-                              height: 1.4,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            drill.mouthGuidance,
+                            style: GoogleFonts.inter(
+                              fontSize: 11,
+                              color: NotionColors.textTertiary,
+                              height: 1.35,
                             ),
                           ),
                         ],
                       ),
                     ),
-                    TextButton(
-                      onPressed: widget.onOpenLessonForPhoneme == null
-                          ? null
-                          : () => widget.onOpenLessonForPhoneme!(drill.phoneme),
-                      child: const Text('Mở bài học'),
-                    ),
+                    if (widget.onOpenLessonForPhoneme != null) ...[
+                      const SizedBox(width: 8),
+                      ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: NotionColors.surfaceSubtle,
+                          foregroundColor: NotionColors.textMain,
+                          elevation: 0,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 6,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(4),
+                            side: const BorderSide(
+                              color: NotionColors.border,
+                            ),
+                          ),
+                        ),
+                        onPressed: () =>
+                            widget.onOpenLessonForPhoneme!(drill.phoneme),
+                        child: Text(
+                          'Mở bài học',
+                          style: GoogleFonts.inter(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ],
                   ],
                 ),
               ),
