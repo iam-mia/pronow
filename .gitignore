@@ -1,0 +1,52 @@
+# Local secrets and environment-specific configuration
+.env
+.env.*
+!.env.example
+**/.env
+**/.env.*
+!**/.env.example
+**/secrets/
+**/*secret*
+**/*credentials*
+
+# Local developer notes intentionally kept out of the shared repository
+/PROJECT_RULES_AND_LOG.md
+/TEAM_CONTRIBUTIONS.md
+
+# Python
+**/venv/
+**/.venv/
+**/__pycache__/
+*.py[cod]
+*.pyd
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Local databases and generated audio cache
+backend/*.db
+backend/*.sqlite
+backend/*.sqlite3
+backend/static/audio_cache/
+
+# Flutter/Dart generated files and build outputs
+**/.dart_tool/
+**/.flutter-plugins
+**/.flutter-plugins-dependencies
+**/build/
+**/coverage/
+**/*.iml
+
+# Android local state and signing materials
+**/.gradle/
+**/local.properties
+**/key.properties
+**/*.jks
+**/*.keystore
+
+# Editor and operating-system files
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
