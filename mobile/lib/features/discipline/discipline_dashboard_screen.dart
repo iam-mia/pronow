@@ -97,133 +97,138 @@ class _DisciplineDashboardScreenState extends State<DisciplineDashboardScreen> {
                 right: 24,
                 bottom: MediaQuery.of(context).viewInsets.bottom + 24,
               ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        'Đặt Mục Tiêu Hàng Ngày',
-                        style: Theme.of(context).textTheme.titleLarge,
-                      ),
-                      IconButton(
-                        icon: const Icon(
-                          Icons.close,
-                          size: 20,
-                          color: NotionColors.textMuted,
-                        ),
-                        onPressed: () => Navigator.pop(ctx),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Duy trì thời gian và số câu luyện tập mỗi ngày để hình thành phản xạ phát âm.',
-                    style: Theme.of(context).textTheme.bodyMedium,
-                  ),
-                  const SizedBox(height: 24),
-
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        'Thời gian học mỗi ngày:',
-                        style: GoogleFonts.inter(
-                          fontWeight: FontWeight.w600,
-                          color: NotionColors.textMain,
-                        ),
-                      ),
-                      Text(
-                        '$tempMinutes phút',
-                        style: GoogleFonts.inter(
-                          fontWeight: FontWeight.w700,
-                          color: NotionColors.textMain,
-                        ),
-                      ),
-                    ],
-                  ),
-                  Slider(
-                    value: tempMinutes.toDouble(),
-                    min: 5,
-                    max: 60,
-                    divisions: 11,
-                    activeColor: NotionColors.textMain,
-                    inactiveColor: NotionColors.border,
-                    onChanged: (v) {
-                      setModalState(() => tempMinutes = v.toInt());
-                    },
-                  ),
-                  const SizedBox(height: 16),
-
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        'Số câu phát âm mỗi ngày:',
-                        style: GoogleFonts.inter(
-                          fontWeight: FontWeight.w600,
-                          color: NotionColors.textMain,
-                        ),
-                      ),
-                      Text(
-                        '$tempSentences câu',
-                        style: GoogleFonts.inter(
-                          fontWeight: FontWeight.w700,
-                          color: NotionColors.textMain,
-                        ),
-                      ),
-                    ],
-                  ),
-                  Slider(
-                    value: tempSentences.toDouble(),
-                    min: 5,
-                    max: 50,
-                    divisions: 9,
-                    activeColor: NotionColors.textMain,
-                    inactiveColor: NotionColors.border,
-                    onChanged: (v) {
-                      setModalState(() => tempSentences = v.toInt());
-                    },
-                  ),
-                  const SizedBox(height: 24),
-
-                  SizedBox(
-                    width: double.infinity,
-                    height: 46,
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: NotionColors.textMain,
-                        foregroundColor: Colors.white,
-                        elevation: 0,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                      ),
-                      onPressed: () async {
-                        await DisciplineState.updateGoals(
-                          minutes: tempMinutes,
-                          sentences: tempSentences,
-                        );
-                        if (!ctx.mounted) return;
-                        Navigator.pop(ctx);
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Đã cập nhật mục tiêu hàng ngày.'),
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Expanded(
+                          child: Text(
+                            'Đặt Mục Tiêu Hàng Ngày',
+                            style: Theme.of(context).textTheme.titleLarge,
+                            overflow: TextOverflow.ellipsis,
                           ),
-                        );
+                        ),
+                        IconButton(
+                          icon: const Icon(
+                            Icons.close,
+                            size: 20,
+                            color: NotionColors.textMuted,
+                          ),
+                          onPressed: () => Navigator.pop(ctx),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Duy trì thời gian và số câu luyện tập mỗi ngày để hình thành phản xạ phát âm.',
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    ),
+                    const SizedBox(height: 24),
+
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Thời gian học mỗi ngày:',
+                          style: GoogleFonts.inter(
+                            fontWeight: FontWeight.w600,
+                            color: NotionColors.textMain,
+                          ),
+                        ),
+                        Text(
+                          '$tempMinutes phút',
+                          style: GoogleFonts.inter(
+                            fontWeight: FontWeight.w700,
+                            color: NotionColors.textMain,
+                          ),
+                        ),
+                      ],
+                    ),
+                    Slider(
+                      value: tempMinutes.toDouble(),
+                      min: 5,
+                      max: 60,
+                      divisions: 11,
+                      activeColor: NotionColors.textMain,
+                      inactiveColor: NotionColors.border,
+                      onChanged: (v) {
+                        setModalState(() => tempMinutes = v.toInt());
                       },
-                      child: Text(
-                        'Lưu Mục Tiêu',
-                        style: GoogleFonts.inter(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
+                    ),
+                    const SizedBox(height: 16),
+
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Số câu phát âm mỗi ngày:',
+                          style: GoogleFonts.inter(
+                            fontWeight: FontWeight.w600,
+                            color: NotionColors.textMain,
+                          ),
+                        ),
+                        Text(
+                          '$tempSentences câu',
+                          style: GoogleFonts.inter(
+                            fontWeight: FontWeight.w700,
+                            color: NotionColors.textMain,
+                          ),
+                        ),
+                      ],
+                    ),
+                    Slider(
+                      value: tempSentences.toDouble(),
+                      min: 5,
+                      max: 50,
+                      divisions: 9,
+                      activeColor: NotionColors.textMain,
+                      inactiveColor: NotionColors.border,
+                      onChanged: (v) {
+                        setModalState(() => tempSentences = v.toInt());
+                      },
+                    ),
+                    const SizedBox(height: 24),
+
+                    SizedBox(
+                      width: double.infinity,
+                      height: 46,
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: NotionColors.textMain,
+                          foregroundColor: Colors.white,
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        onPressed: () async {
+                          await DisciplineState.updateGoals(
+                            minutes: tempMinutes,
+                            sentences: tempSentences,
+                          );
+                          if (!ctx.mounted) return;
+                          Navigator.pop(ctx);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Đã cập nhật mục tiêu hàng ngày.'),
+                            ),
+                          );
+                        },
+                        child: Text(
+                          'Lưu Mục Tiêu',
+                          style: GoogleFonts.inter(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             );
           },
@@ -234,18 +239,27 @@ class _DisciplineDashboardScreenState extends State<DisciplineDashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isNarrow = screenWidth < 360;
+    final horizontalPadding = isNarrow ? 12.0 : 16.0;
+    final cardPadding = isNarrow ? 14.0 : 20.0;
+
     return Scaffold(
       body: SafeArea(
         child: Center(
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 680),
             child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+              padding: EdgeInsets.symmetric(
+                horizontal: horizontalPadding,
+                vertical: 16,
+              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // 1. Header
+                  // 1. Header (Responsive)
                   Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       Container(
                         padding: const EdgeInsets.all(8),
@@ -264,7 +278,9 @@ class _DisciplineDashboardScreenState extends State<DisciplineDashboardScreen> {
                             Text(
                               'Kỷ Luật & Thói Quen',
                               style: Theme.of(context).textTheme.titleLarge,
+                              overflow: TextOverflow.ellipsis,
                             ),
+                            const SizedBox(height: 2),
                             Text(
                               'Theo dõi chuỗi ngày, mục tiêu và lịch sử luyện tập',
                               style: Theme.of(context).textTheme.bodyMedium,
@@ -288,7 +304,7 @@ class _DisciplineDashboardScreenState extends State<DisciplineDashboardScreen> {
                             builder: (context, freezeDays, _) {
                               return Container(
                                 width: double.infinity,
-                                padding: const EdgeInsets.all(20),
+                                padding: EdgeInsets.all(cardPadding),
                                 decoration: BoxDecoration(
                                   color: NotionColors.surface,
                                   borderRadius: BorderRadius.circular(10),
@@ -299,9 +315,12 @@ class _DisciplineDashboardScreenState extends State<DisciplineDashboardScreen> {
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceBetween,
+                                    Wrap(
+                                      alignment: WrapAlignment.spaceBetween,
+                                      crossAxisAlignment:
+                                          WrapCrossAlignment.center,
+                                      spacing: 8,
+                                      runSpacing: 6,
                                       children: [
                                         Text(
                                           'CHUỖI NGÀY LIÊN TIẾP',
@@ -350,50 +369,46 @@ class _DisciplineDashboardScreenState extends State<DisciplineDashboardScreen> {
                                           ),
                                         ),
                                         const SizedBox(width: 8),
-                                        Text(
-                                          'ngày liên tục',
-                                          style: GoogleFonts.inter(
-                                            fontSize: 16,
-                                            fontWeight: FontWeight.w500,
-                                            color: NotionColors.textMuted,
+                                        Flexible(
+                                          child: Text(
+                                            'ngày liên tục',
+                                            style: GoogleFonts.inter(
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.w500,
+                                              color: NotionColors.textMuted,
+                                            ),
                                           ),
                                         ),
                                       ],
                                     ),
                                     const SizedBox(height: 12),
-                                    Row(
-                                      children: [
-                                        Container(
-                                          padding: const EdgeInsets.symmetric(
-                                            horizontal: 10,
-                                            vertical: 6,
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 10,
+                                        vertical: 6,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: NotionColors.tagGreyBg,
+                                        borderRadius: BorderRadius.circular(6),
+                                      ),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          const Text(
+                                            '🛡️',
+                                            style: TextStyle(fontSize: 13),
                                           ),
-                                          decoration: BoxDecoration(
-                                            color: NotionColors.tagGreyBg,
-                                            borderRadius: BorderRadius.circular(
-                                              6,
+                                          const SizedBox(width: 6),
+                                          Text(
+                                            '$freezeDays lượt đóng băng',
+                                            style: GoogleFonts.inter(
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.w500,
+                                              color: NotionColors.textMain,
                                             ),
                                           ),
-                                          child: Row(
-                                            mainAxisSize: MainAxisSize.min,
-                                            children: [
-                                              const Text(
-                                                '🛡️',
-                                                style: TextStyle(fontSize: 13),
-                                              ),
-                                              const SizedBox(width: 6),
-                                              Text(
-                                                '$freezeDays Lượt đóng băng (Streak Freeze)',
-                                                style: GoogleFonts.inter(
-                                                  fontSize: 12,
-                                                  fontWeight: FontWeight.w500,
-                                                  color: NotionColors.textMain,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      ],
+                                        ],
+                                      ),
                                     ),
                                     const SizedBox(height: 10),
                                     Text(
@@ -418,7 +433,7 @@ class _DisciplineDashboardScreenState extends State<DisciplineDashboardScreen> {
                   // 3. One-Month Calendar
                   Container(
                     width: double.infinity,
-                    padding: const EdgeInsets.all(20),
+                    padding: EdgeInsets.all(cardPadding),
                     decoration: BoxDecoration(
                       color: NotionColors.surface,
                       borderRadius: BorderRadius.circular(10),
@@ -427,8 +442,11 @@ class _DisciplineDashboardScreenState extends State<DisciplineDashboardScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        Wrap(
+                          alignment: WrapAlignment.spaceBetween,
+                          crossAxisAlignment: WrapCrossAlignment.center,
+                          spacing: 12,
+                          runSpacing: 8,
                           children: [
                             Text(
                               'LỊCH RÈN LUYỆN THÁNG ${DateTime.now().month}/${DateTime.now().year}',
@@ -440,6 +458,7 @@ class _DisciplineDashboardScreenState extends State<DisciplineDashboardScreen> {
                               ),
                             ),
                             Row(
+                              mainAxisSize: MainAxisSize.min,
                               children: [
                                 Container(
                                   width: 10,
@@ -496,7 +515,7 @@ class _DisciplineDashboardScreenState extends State<DisciplineDashboardScreen> {
                   // 4. Daily Goals
                   Container(
                     width: double.infinity,
-                    padding: const EdgeInsets.all(20),
+                    padding: EdgeInsets.all(cardPadding),
                     decoration: BoxDecoration(
                       color: NotionColors.surface,
                       borderRadius: BorderRadius.circular(10),
@@ -508,13 +527,15 @@ class _DisciplineDashboardScreenState extends State<DisciplineDashboardScreen> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Text(
-                              'MỤC TIÊU HÔM NAY',
-                              style: GoogleFonts.inter(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w600,
-                                color: NotionColors.textMuted,
-                                letterSpacing: 0.8,
+                            Expanded(
+                              child: Text(
+                                'MỤC TIÊU HÔM NAY',
+                                style: GoogleFonts.inter(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w600,
+                                  color: NotionColors.textMuted,
+                                  letterSpacing: 0.8,
+                                ),
                               ),
                             ),
                             MouseRegion(
@@ -594,12 +615,13 @@ class _DisciplineDashboardScreenState extends State<DisciplineDashboardScreen> {
                             );
                           },
                         ),
-                        const SizedBox(height: 8),
+                        const SizedBox(height: 10),
                         Text(
                           'Cập nhật sau mỗi lượt có giọng nói: thời gian lấy từ độ dài thu âm; câu chỉ tính khi đạt từ 80 điểm.',
                           style: GoogleFonts.inter(
                             fontSize: 11,
                             color: NotionColors.textMuted,
+                            height: 1.4,
                           ),
                         ),
                       ],
@@ -607,6 +629,7 @@ class _DisciplineDashboardScreenState extends State<DisciplineDashboardScreen> {
                   ),
                   const SizedBox(height: 20),
 
+                  // 5. Weekly Score Chart
                   ValueListenableBuilder<List<DailyPracticeSummary>>(
                     valueListenable: DisciplineState.dailySummaryNotifier,
                     builder: (context, summaries, _) =>
@@ -614,10 +637,10 @@ class _DisciplineDashboardScreenState extends State<DisciplineDashboardScreen> {
                   ),
                   const SizedBox(height: 20),
 
-                  // 5. Notifications
+                  // 6. Notifications
                   Container(
                     width: double.infinity,
-                    padding: const EdgeInsets.all(20),
+                    padding: EdgeInsets.all(cardPadding),
                     decoration: BoxDecoration(
                       color: NotionColors.surface,
                       borderRadius: BorderRadius.circular(10),
@@ -627,25 +650,30 @@ class _DisciplineDashboardScreenState extends State<DisciplineDashboardScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Row(
-                              children: [
-                                const Text(
-                                  '🔔',
-                                  style: TextStyle(fontSize: 16),
-                                ),
-                                const SizedBox(width: 8),
-                                Text(
-                                  'Nhắc nhở học hàng ngày',
-                                  style: GoogleFonts.inter(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w600,
-                                    color: NotionColors.textMain,
+                            Expanded(
+                              child: Row(
+                                children: [
+                                  const Text(
+                                    '🔔',
+                                    style: TextStyle(fontSize: 16),
                                   ),
-                                ),
-                              ],
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: Text(
+                                      'Nhắc nhở học hàng ngày',
+                                      style: GoogleFonts.inter(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w600,
+                                        color: NotionColors.textMain,
+                                      ),
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
+                            const SizedBox(width: 8),
                             Switch(
                               value: _isReminderEnabled,
                               activeThumbColor: NotionColors.textMain,
@@ -679,8 +707,8 @@ class _DisciplineDashboardScreenState extends State<DisciplineDashboardScreen> {
                               },
                               child: Container(
                                 padding: const EdgeInsets.symmetric(
-                                  horizontal: 14,
-                                  vertical: 8,
+                                  horizontal: 10,
+                                  vertical: 6,
                                 ),
                                 decoration: BoxDecoration(
                                   color: NotionColors.surfaceSubtle,
@@ -694,16 +722,19 @@ class _DisciplineDashboardScreenState extends State<DisciplineDashboardScreen> {
                                   children: [
                                     const Icon(
                                       Icons.access_time_rounded,
-                                      size: 16,
+                                      size: 15,
                                       color: NotionColors.textMuted,
                                     ),
-                                    const SizedBox(width: 8),
-                                    Text(
-                                      'Giờ nhắc: ${_reminderTime.format(context)}',
-                                      style: GoogleFonts.inter(
-                                        fontSize: 13,
-                                        fontWeight: FontWeight.w600,
-                                        color: NotionColors.textMain,
+                                    const SizedBox(width: 6),
+                                    Flexible(
+                                      child: Text(
+                                        'Giờ nhắc: ${_reminderTime.format(context)}',
+                                        style: GoogleFonts.inter(
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w600,
+                                          color: NotionColors.textMain,
+                                        ),
+                                        overflow: TextOverflow.ellipsis,
                                       ),
                                     ),
                                   ],
@@ -717,10 +748,10 @@ class _DisciplineDashboardScreenState extends State<DisciplineDashboardScreen> {
                   ),
                   const SizedBox(height: 20),
 
-                  // 4. TIẾN ĐỘ BÀI HỌC ĐÃ LUYỆN
+                  // 7. TIẾN ĐỘ BÀI HỌC ĐÃ LUYỆN
                   Container(
                     width: double.infinity,
-                    padding: const EdgeInsets.all(20),
+                    padding: EdgeInsets.all(cardPadding),
                     decoration: BoxDecoration(
                       color: NotionColors.surface,
                       borderRadius: BorderRadius.circular(10),
@@ -732,23 +763,29 @@ class _DisciplineDashboardScreenState extends State<DisciplineDashboardScreen> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Row(
-                              children: [
-                                const Text(
-                                  '📚',
-                                  style: TextStyle(fontSize: 16),
-                                ),
-                                const SizedBox(width: 8),
-                                Text(
-                                  'Tiến độ bài học đã luyện',
-                                  style: GoogleFonts.inter(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w600,
-                                    color: NotionColors.textMain,
+                            Expanded(
+                              child: Row(
+                                children: [
+                                  const Text(
+                                    '📚',
+                                    style: TextStyle(fontSize: 16),
                                   ),
-                                ),
-                              ],
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: Text(
+                                      'Tiến độ bài học đã luyện',
+                                      style: GoogleFonts.inter(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w600,
+                                        color: NotionColors.textMain,
+                                      ),
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
+                            const SizedBox(width: 8),
                             Text(
                               '${_lessonProgressList.where((p) => p.isPassed).length} câu đạt',
                               style: GoogleFonts.inter(
@@ -759,21 +796,13 @@ class _DisciplineDashboardScreenState extends State<DisciplineDashboardScreen> {
                             ),
                           ],
                         ),
-                        const SizedBox(height: 12),
+                        const SizedBox(height: 14),
                         if (_lessonProgressList.isEmpty)
-                          Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                            child: Center(
-                              child: Text(
-                                'Bạn chưa luyện câu nào trong Lộ trình bài học.\nHãy vào tab "Bài Học" và hoàn thành các câu đạt ≥ 80 điểm!',
-                                style: GoogleFonts.inter(
-                                  fontSize: 13,
-                                  color: NotionColors.textMuted,
-                                  height: 1.4,
-                                ),
-                                textAlign: TextAlign.center,
-                              ),
-                            ),
+                          _buildEmptyStateWidget(
+                            icon: Icons.menu_book_outlined,
+                            title: 'Chưa có câu nào trong Lộ trình bài học',
+                            description:
+                                'Vào tab "Bài Học", chọn bất kỳ câu mẫu nào và hoàn thành với điểm số ≥ 80 để ghi nhận tiến độ tại đây.',
                           )
                         else
                           ..._lessonProgressList.map((item) {
@@ -793,15 +822,19 @@ class _DisciplineDashboardScreenState extends State<DisciplineDashboardScreen> {
                                 ),
                               ),
                               child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Icon(
-                                    item.isPassed
-                                        ? Icons.check_circle_rounded
-                                        : Icons.radio_button_unchecked_rounded,
-                                    size: 16,
-                                    color: item.isPassed
-                                        ? NotionColors.tagGreenText
-                                        : NotionColors.tagAmberText,
+                                  Padding(
+                                    padding: const EdgeInsets.only(top: 2),
+                                    child: Icon(
+                                      item.isPassed
+                                          ? Icons.check_circle_rounded
+                                          : Icons.radio_button_unchecked_rounded,
+                                      size: 16,
+                                      color: item.isPassed
+                                          ? NotionColors.tagGreenText
+                                          : NotionColors.tagAmberText,
+                                    ),
                                   ),
                                   const SizedBox(width: 10),
                                   Expanded(
@@ -817,17 +850,58 @@ class _DisciplineDashboardScreenState extends State<DisciplineDashboardScreen> {
                                             color: NotionColors.textMain,
                                           ),
                                         ),
-                                        const SizedBox(height: 2),
-                                        Text(
-                                          'Bài ${item.lessonId} • Điểm cao nhất: ${item.bestScore.toStringAsFixed(0)}/100 (${item.attemptsCount} lần thử)',
-                                          style: GoogleFonts.inter(
-                                            fontSize: 11,
-                                            color: NotionColors.textMuted,
-                                          ),
+                                        const SizedBox(height: 3),
+                                        Wrap(
+                                          spacing: 6,
+                                          runSpacing: 2,
+                                          crossAxisAlignment:
+                                              WrapCrossAlignment.center,
+                                          children: [
+                                            Text(
+                                              'Bài ${item.lessonId}',
+                                              style: GoogleFonts.inter(
+                                                fontSize: 11,
+                                                fontWeight: FontWeight.w500,
+                                                color: NotionColors.textMuted,
+                                              ),
+                                            ),
+                                            Text(
+                                              '•',
+                                              style: GoogleFonts.inter(
+                                                fontSize: 11,
+                                                color: NotionColors.textTertiary,
+                                              ),
+                                            ),
+                                            Text(
+                                              'Điểm: ${item.bestScore.toStringAsFixed(0)}/100',
+                                              style: GoogleFonts.inter(
+                                                fontSize: 11,
+                                                fontWeight: FontWeight.w600,
+                                                color: item.isPassed
+                                                    ? NotionColors.tagGreenText
+                                                    : NotionColors.tagAmberText,
+                                              ),
+                                            ),
+                                            Text(
+                                              '•',
+                                              style: GoogleFonts.inter(
+                                                fontSize: 11,
+                                                color: NotionColors.textTertiary,
+                                              ),
+                                            ),
+                                            Text(
+                                              '${item.attemptsCount} lần thử',
+                                              style: GoogleFonts.inter(
+                                                fontSize: 11,
+                                                color: NotionColors.textMuted,
+                                              ),
+                                            ),
+                                          ],
                                         ),
                                       ],
                                     ),
                                   ),
+                                  const SizedBox(width: 8),
                                   Container(
                                     padding: const EdgeInsets.symmetric(
                                       horizontal: 8,
@@ -859,10 +933,10 @@ class _DisciplineDashboardScreenState extends State<DisciplineDashboardScreen> {
                   ),
                   const SizedBox(height: 20),
 
-                  // 5. SỔ TAY CÂU TỰ DO ĐÃ LƯU
+                  // 8. SỔ TAY CÂU TỰ DO ĐÃ LƯU
                   Container(
                     width: double.infinity,
-                    padding: const EdgeInsets.all(20),
+                    padding: EdgeInsets.all(cardPadding),
                     decoration: BoxDecoration(
                       color: NotionColors.surface,
                       borderRadius: BorderRadius.circular(10),
@@ -874,20 +948,29 @@ class _DisciplineDashboardScreenState extends State<DisciplineDashboardScreen> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Row(
-                              children: [
-                                const Text('⭐', style: TextStyle(fontSize: 16)),
-                                const SizedBox(width: 8),
-                                Text(
-                                  'Sổ tay câu tự do đã lưu',
-                                  style: GoogleFonts.inter(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w600,
-                                    color: NotionColors.textMain,
+                            Expanded(
+                              child: Row(
+                                children: [
+                                  const Text(
+                                    '⭐',
+                                    style: TextStyle(fontSize: 16),
                                   ),
-                                ),
-                              ],
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: Text(
+                                      'Sổ tay câu tự do đã lưu',
+                                      style: GoogleFonts.inter(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w600,
+                                        color: NotionColors.textMain,
+                                      ),
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
+                            const SizedBox(width: 8),
                             Text(
                               '${_savedSentences.length} câu',
                               style: GoogleFonts.inter(
@@ -898,26 +981,18 @@ class _DisciplineDashboardScreenState extends State<DisciplineDashboardScreen> {
                             ),
                           ],
                         ),
-                        const SizedBox(height: 8),
+                        const SizedBox(height: 6),
                         Text(
                           'Những câu tiếng Anh bạn tự nhập và bấm "Lưu câu này" trong màn hình Luyện phát âm.',
                           style: Theme.of(context).textTheme.bodyMedium,
                         ),
-                        const SizedBox(height: 12),
+                        const SizedBox(height: 14),
                         if (_savedSentences.isEmpty)
-                          Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                            child: Center(
-                              child: Text(
-                                'Chưa có câu nào trong sổ tay.\nKhi luyện câu tự do, hãy bấm "⭐ Lưu câu này" để lưu vào đây và luyện lại sau!',
-                                style: GoogleFonts.inter(
-                                  fontSize: 13,
-                                  color: NotionColors.textMuted,
-                                  height: 1.4,
-                                ),
-                                textAlign: TextAlign.center,
-                              ),
-                            ),
+                          _buildEmptyStateWidget(
+                            icon: Icons.bookmark_border_rounded,
+                            title: 'Sổ tay câu tự do đang trống',
+                            description:
+                                'Khi luyện bất kỳ câu tự do nào tại tab "Luyện Nói", hãy bấm "⭐ Lưu câu này" để lưu vào sổ tay và luyện lại sau.',
                           )
                         else
                           ..._savedSentences.map((saved) {
@@ -932,6 +1007,7 @@ class _DisciplineDashboardScreenState extends State<DisciplineDashboardScreen> {
                                 ),
                               ),
                               child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.center,
                                 children: [
                                   Expanded(
                                     child: Column(
@@ -941,12 +1017,12 @@ class _DisciplineDashboardScreenState extends State<DisciplineDashboardScreen> {
                                         Text(
                                           saved.sentenceText,
                                           style: GoogleFonts.inter(
-                                            fontSize: 14,
+                                            fontSize: 13,
                                             fontWeight: FontWeight.w600,
                                             color: NotionColors.textMain,
                                           ),
                                         ),
-                                        const SizedBox(height: 3),
+                                        const SizedBox(height: 2),
                                         Text(
                                           saved.ipa,
                                           style: GoogleFonts.robotoMono(
@@ -958,7 +1034,6 @@ class _DisciplineDashboardScreenState extends State<DisciplineDashboardScreen> {
                                     ),
                                   ),
                                   const SizedBox(width: 8),
-                                  // Re-practice button
                                   MouseRegion(
                                     cursor: SystemMouseCursors.click,
                                     child: GestureDetector(
@@ -993,16 +1068,16 @@ class _DisciplineDashboardScreenState extends State<DisciplineDashboardScreen> {
                                       ),
                                     ),
                                   ),
-                                  const SizedBox(width: 6),
-                                  // Delete button
+                                  const SizedBox(width: 4),
                                   IconButton(
                                     icon: const Icon(
                                       Icons.delete_outline_rounded,
                                       size: 16,
                                       color: NotionColors.textMuted,
                                     ),
-                                    padding: EdgeInsets.zero,
+                                    padding: const EdgeInsets.all(4),
                                     constraints: const BoxConstraints(),
+                                    tooltip: 'Xóa câu',
                                     onPressed: () =>
                                         _deleteSavedSentence(saved.id),
                                   ),
@@ -1018,6 +1093,48 @@ class _DisciplineDashboardScreenState extends State<DisciplineDashboardScreen> {
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildEmptyStateWidget({
+    required IconData icon,
+    required String title,
+    required String description,
+  }) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
+      decoration: BoxDecoration(
+        color: NotionColors.surfaceSubtle,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: NotionColors.borderSubtle),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 28, color: NotionColors.textTertiary),
+          const SizedBox(height: 8),
+          Text(
+            title,
+            style: GoogleFonts.inter(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: NotionColors.textMain,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 4),
+          Text(
+            description,
+            style: GoogleFonts.inter(
+              fontSize: 12,
+              color: NotionColors.textMuted,
+              height: 1.4,
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ],
       ),
     );
   }
@@ -1058,9 +1175,12 @@ class _DisciplineDashboardScreenState extends State<DisciplineDashboardScreen> {
               ) /
               totalAttempts;
 
+    final isNarrow = MediaQuery.of(context).size.width < 360;
+    final cardPadding = isNarrow ? 14.0 : 20.0;
+
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(20),
+      padding: EdgeInsets.all(cardPadding),
       decoration: BoxDecoration(
         color: NotionColors.surface,
         borderRadius: BorderRadius.circular(10),
@@ -1070,38 +1190,69 @@ class _DisciplineDashboardScreenState extends State<DisciplineDashboardScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Icon(
-                Icons.show_chart_rounded,
-                size: 18,
-                color: NotionColors.textMuted,
+              Row(
+                children: [
+                  const Icon(
+                    Icons.show_chart_rounded,
+                    size: 18,
+                    color: NotionColors.textMuted,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    'TIẾN BỘ 7 NGÀY',
+                    style: GoogleFonts.inter(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      color: NotionColors.textMuted,
+                      letterSpacing: 0.6,
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(width: 8),
-              Text(
-                'TIẾN BỘ 7 NGÀY',
-                style: GoogleFonts.inter(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w700,
-                  color: NotionColors.textMuted,
-                  letterSpacing: 0.6,
+              if (activeDays > 0)
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 2,
+                  ),
+                  decoration: BoxDecoration(
+                    color: NotionColors.tagBlueBg,
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Text(
+                    'TB: ${averageScore.toStringAsFixed(0)}/100',
+                    style: GoogleFonts.inter(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                      color: NotionColors.tagBlueText,
+                    ),
+                  ),
                 ),
-              ),
             ],
           ),
-          const SizedBox(height: 5),
+          const SizedBox(height: 6),
           Text(
             activeDays == 0
-                ? 'Chưa có lượt chấm nào trong 7 ngày gần đây.'
-                : '$activeDays ngày luyện · điểm trung bình ${averageScore.toStringAsFixed(0)}/100',
+                ? 'Theo dõi điểm phát âm trung bình qua từng ngày.'
+                : '$activeDays/7 ngày đã luyện tập • $totalAttempts lượt chấm',
             style: GoogleFonts.inter(
               fontSize: 12,
-              color: NotionColors.textMain,
+              color: NotionColors.textMuted,
             ),
           ),
-          if (activeDays > 0) ...[
-            const SizedBox(height: 10),
+          const SizedBox(height: 14),
+          if (activeDays == 0)
+            _buildEmptyStateWidget(
+              icon: Icons.auto_graph_rounded,
+              title: 'Chưa có dữ liệu điểm 7 ngày qua',
+              description:
+                  'Sau khi hoàn thành lượt chấm phát âm đầu tiên, biểu đồ xu hướng điểm số và mức độ tiến bộ hàng ngày sẽ xuất hiện tại đây.',
+            )
+          else
             SizedBox(
-              height: 170,
+              height: 180,
               width: double.infinity,
               child: CustomPaint(
                 painter: _WeeklyScorePainter(
@@ -1112,7 +1263,6 @@ class _DisciplineDashboardScreenState extends State<DisciplineDashboardScreen> {
                 ),
               ),
             ),
-          ],
         ],
       ),
     );
@@ -1124,7 +1274,14 @@ class _DisciplineDashboardScreenState extends State<DisciplineDashboardScreen> {
     final firstDayWeekday = DateTime(now.year, now.month, 1).weekday;
     final weekdays = ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'];
 
+    final monthPrefix =
+        "${now.year}-${now.month.toString().padLeft(2, '0')}-";
+    final completedDaysThisMonth = historyMap.entries.where((entry) {
+      return entry.key.startsWith(monthPrefix) && entry.value > 0;
+    }).length;
+
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -1150,8 +1307,8 @@ class _DisciplineDashboardScreenState extends State<DisciplineDashboardScreen> {
           physics: const NeverScrollableScrollPhysics(),
           gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: 7,
-            mainAxisSpacing: 8,
-            crossAxisSpacing: 8,
+            mainAxisSpacing: 6,
+            crossAxisSpacing: 6,
             childAspectRatio: 1.1,
           ),
           itemCount: (firstDayWeekday - 1) + daysInMonth,
@@ -1165,10 +1322,15 @@ class _DisciplineDashboardScreenState extends State<DisciplineDashboardScreen> {
                 "${now.year}-${now.month.toString().padLeft(2, '0')}-${dayNum.toString().padLeft(2, '0')}";
             bool isPracticed = (historyMap[dayKey] ?? 0) > 0;
             bool isToday = dayNum == now.day;
+            bool isFuture = dayNum > now.day;
 
             return Container(
               decoration: BoxDecoration(
-                color: isPracticed ? NotionColors.textMain : Colors.white,
+                color: isPracticed
+                    ? NotionColors.textMain
+                    : (isFuture
+                          ? NotionColors.surfaceSubtle.withAlpha(120)
+                          : Colors.white),
                 borderRadius: BorderRadius.circular(6),
                 border: Border.all(
                   color: isToday
@@ -1176,7 +1338,7 @@ class _DisciplineDashboardScreenState extends State<DisciplineDashboardScreen> {
                       : (isPracticed
                             ? NotionColors.textMain
                             : NotionColors.border),
-                  width: isToday ? 1.8 : 1.0,
+                  width: isToday ? 2.0 : 1.0,
                 ),
               ),
               child: Center(
@@ -1191,12 +1353,22 @@ class _DisciplineDashboardScreenState extends State<DisciplineDashboardScreen> {
                         ? Colors.white
                         : (isToday
                               ? NotionColors.tagAmberText
-                              : NotionColors.textMain),
+                              : (isFuture
+                                    ? NotionColors.textTertiary
+                                    : NotionColors.textMain)),
                   ),
                 ),
               ),
             );
           },
+        ),
+        const SizedBox(height: 10),
+        Text(
+          'Đã hoàn thành $completedDaysThisMonth / $daysInMonth ngày trong tháng này.',
+          style: GoogleFonts.inter(
+            fontSize: 11,
+            color: NotionColors.textMuted,
+          ),
         ),
       ],
     );
@@ -1209,32 +1381,67 @@ class _DisciplineDashboardScreenState extends State<DisciplineDashboardScreen> {
     required String unit,
   }) {
     final progress = target > 0 ? (current / target).clamp(0.0, 1.0) : 0.0;
+    final isCompleted = target > 0 && current >= target;
     final currentText = unit == 'phút'
         ? current.toStringAsFixed(1)
         : current.toInt().toString();
     final targetText = unit == 'phút'
         ? target.toStringAsFixed(0)
         : target.toInt().toString();
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(
-              title,
-              style: GoogleFonts.inter(
-                fontSize: 13,
-                color: NotionColors.textMain,
-                fontWeight: FontWeight.w500,
+            Expanded(
+              child: Row(
+                children: [
+                  Flexible(
+                    child: Text(
+                      title,
+                      style: GoogleFonts.inter(
+                        fontSize: 13,
+                        color: NotionColors.textMain,
+                        fontWeight: FontWeight.w500,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  if (isCompleted) ...[
+                    const SizedBox(width: 6),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 6,
+                        vertical: 1,
+                      ),
+                      decoration: BoxDecoration(
+                        color: NotionColors.tagGreenBg,
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: Text(
+                        'Đạt ✓',
+                        style: GoogleFonts.inter(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w700,
+                          color: NotionColors.tagGreenText,
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
               ),
             ),
+            const SizedBox(width: 8),
             Text(
               '$currentText / $targetText $unit',
               style: GoogleFonts.inter(
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
-                color: NotionColors.textMuted,
+                color: isCompleted
+                    ? NotionColors.tagGreenText
+                    : NotionColors.textMuted,
               ),
             ),
           ],
@@ -1245,7 +1452,9 @@ class _DisciplineDashboardScreenState extends State<DisciplineDashboardScreen> {
           child: LinearProgressIndicator(
             value: progress,
             backgroundColor: NotionColors.surfaceSubtle,
-            color: NotionColors.textMain,
+            color: isCompleted
+                ? NotionColors.tagGreenText
+                : NotionColors.textMain,
             minHeight: 6,
           ),
         ),
@@ -1264,21 +1473,37 @@ class _WeeklyScorePainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     if (size.width <= 40 || size.height <= 40 || scores.isEmpty) return;
 
-    const left = 30.0;
-    const right = 8.0;
-    const top = 10.0;
-    const bottom = 25.0;
+    const left = 32.0;
+    const right = 12.0;
+    const top = 22.0;
+    const bottom = 24.0;
     final plotWidth = size.width - left - right;
     final plotHeight = size.height - top - bottom;
+
     final gridPaint = Paint()
       ..color = NotionColors.borderSubtle
       ..strokeWidth = 1;
+
+    final guideLinePaint = Paint()
+      ..color = NotionColors.borderSubtle
+      ..strokeWidth = 1
+      ..style = PaintingStyle.stroke;
+
     final linePaint = Paint()
       ..color = NotionColors.tagBlueText
       ..strokeWidth = 2.5
-      ..strokeCap = StrokeCap.round;
-    final pointPaint = Paint()..color = NotionColors.tagBlueText;
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round;
 
+    final pointPaint = Paint()
+      ..color = NotionColors.tagBlueText
+      ..style = PaintingStyle.fill;
+
+    final pointInnerPaint = Paint()
+      ..color = Colors.white
+      ..style = PaintingStyle.fill;
+
+    // Draw horizontal grid lines at 0, 50, 100
     for (final level in [0, 50, 100]) {
       final y = top + plotHeight * (1 - level / 100);
       canvas.drawLine(
@@ -1290,8 +1515,12 @@ class _WeeklyScorePainter extends CustomPainter {
         canvas,
         '$level',
         Offset(0, y - 6),
-        const TextStyle(fontSize: 9, color: NotionColors.textMuted),
-        width: left - 5,
+        const TextStyle(
+          fontSize: 9,
+          fontWeight: FontWeight.w500,
+          color: NotionColors.textTertiary,
+        ),
+        width: left - 6,
       );
     }
 
@@ -1301,36 +1530,67 @@ class _WeeklyScorePainter extends CustomPainter {
       return Offset(x, y);
     }
 
+    // Connect active days
+    int? prevActiveIndex;
     for (var index = 0; index < scores.length; index++) {
       final score = scores[index];
-      if (score == null) continue;
-      final point = pointAt(index, score);
-      if (index > 0 && scores[index - 1] != null) {
-        canvas.drawLine(
-          pointAt(index - 1, scores[index - 1]!),
-          point,
-          linePaint,
-        );
+      if (score != null) {
+        final currentPoint = pointAt(index, score);
+        if (prevActiveIndex != null) {
+          final prevPoint = pointAt(prevActiveIndex, scores[prevActiveIndex]!);
+          canvas.drawLine(prevPoint, currentPoint, linePaint);
+        }
+        prevActiveIndex = index;
       }
-      canvas.drawCircle(point, 4, pointPaint);
-      _paintText(
-        canvas,
-        labels[index],
-        Offset(point.dx - 18, size.height - bottom + 7),
-        const TextStyle(fontSize: 8, color: NotionColors.textMuted),
-        width: 36,
-      );
     }
 
+    // Draw points and values
     for (var index = 0; index < scores.length; index++) {
-      if (scores[index] != null) continue;
+      final score = scores[index];
       final x = left + plotWidth * index / (scores.length - 1);
+
+      // Draw subtle vertical guide line down to x axis
+      canvas.drawLine(
+        Offset(x, top),
+        Offset(x, size.height - bottom),
+        guideLinePaint,
+      );
+
+      if (score != null) {
+        final point = pointAt(index, score);
+
+        // Draw score text above the dot
+        final scoreText = score.toStringAsFixed(0);
+        _paintText(
+          canvas,
+          scoreText,
+          Offset(point.dx - 16, point.dy - 17),
+          const TextStyle(
+            fontSize: 10,
+            fontWeight: FontWeight.w700,
+            color: NotionColors.tagBlueText,
+          ),
+          width: 32,
+        );
+
+        // Outer dot & inner white dot
+        canvas.drawCircle(point, 5, pointPaint);
+        canvas.drawCircle(point, 2.2, pointInnerPaint);
+      }
+
+      // Draw bottom label (date)
       _paintText(
         canvas,
         labels[index],
-        Offset(x - 18, size.height - bottom + 7),
-        const TextStyle(fontSize: 8, color: NotionColors.textMuted),
-        width: 36,
+        Offset(x - 20, size.height - bottom + 6),
+        TextStyle(
+          fontSize: 9,
+          fontWeight: score != null ? FontWeight.w600 : FontWeight.w400,
+          color: score != null
+              ? NotionColors.textMain
+              : NotionColors.textTertiary,
+        ),
+        width: 40,
       );
     }
   }
