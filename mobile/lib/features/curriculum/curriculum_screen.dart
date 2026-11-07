@@ -654,10 +654,27 @@ class _CurriculumScreenState extends State<CurriculumScreen> {
                   if (_selectedLesson == null) ...[
                     // 10 Lessons List View
                     ...tenLessons.map((lesson) {
-                      bool isDone = _isLessonCompleted(lesson);
-                      int passedCount = lesson.sentences
+                      final isDone = _isLessonCompleted(lesson);
+                      final passedCount = lesson.sentences
                           .where((s) => _passedSentenceIds.contains(s.id))
                           .length;
+                      final hasAttempted = lesson.sentences.any(
+                        (s) => _sentenceBestScores.containsKey(s.id),
+                      );
+                      final progress = passedCount / lesson.sentences.length;
+                      final status = isDone
+                          ? 'Đã hoàn thành'
+                          : (hasAttempted ? 'Đang học' : 'Chưa học');
+                      final statusColor = isDone
+                          ? NotionColors.tagGreenText
+                          : (hasAttempted
+                                ? NotionColors.tagAmberText
+                                : NotionColors.textMuted);
+                      final statusBackground = isDone
+                          ? NotionColors.tagGreenBg
+                          : (hasAttempted
+                                ? NotionColors.tagAmberBg
+                                : NotionColors.surfaceSubtle);
 
                       return MouseRegion(
                         cursor: SystemMouseCursors.click,
@@ -676,6 +693,7 @@ class _CurriculumScreenState extends State<CurriculumScreen> {
                               ),
                             ),
                             child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
                                   lesson.icon,
@@ -687,78 +705,89 @@ class _CurriculumScreenState extends State<CurriculumScreen> {
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,
                                     children: [
-                                      Text(
-                                        lesson.title,
-                                        style: GoogleFonts.inter(
-                                          fontSize: 15,
-                                          fontWeight: FontWeight.w600,
-                                          color: NotionColors.textMain,
-                                        ),
+                                      Row(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Expanded(
+                                            child: Text(
+                                              lesson.title,
+                                              style: GoogleFonts.inter(
+                                                fontSize: 15,
+                                                fontWeight: FontWeight.w600,
+                                                color: NotionColors.textMain,
+                                              ),
+                                            ),
+                                          ),
+                                          const SizedBox(width: 8),
+                                          Container(
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 8,
+                                              vertical: 4,
+                                            ),
+                                            decoration: BoxDecoration(
+                                              color: statusBackground,
+                                              borderRadius:
+                                                  BorderRadius.circular(4),
+                                            ),
+                                            child: Text(
+                                              status,
+                                              style: GoogleFonts.inter(
+                                                fontSize: 10,
+                                                fontWeight: FontWeight.w600,
+                                                color: statusColor,
+                                              ),
+                                            ),
+                                          ),
+                                        ],
                                       ),
-                                      const SizedBox(height: 3),
+                                      const SizedBox(height: 4),
                                       Text(
                                         lesson.description,
                                         style: Theme.of(context)
                                             .textTheme
                                             .bodyMedium,
-                                        maxLines: 1,
+                                        maxLines: 2,
                                         overflow: TextOverflow.ellipsis,
+                                      ),
+                                      const SizedBox(height: 10),
+                                      Row(
+                                        children: [
+                                          Expanded(
+                                            child: ClipRRect(
+                                              borderRadius:
+                                                  BorderRadius.circular(4),
+                                              child: LinearProgressIndicator(
+                                                value: progress,
+                                                minHeight: 5,
+                                                backgroundColor:
+                                                    NotionColors.surfaceSubtle,
+                                                color: isDone
+                                                    ? NotionColors.tagGreenText
+                                                    : NotionColors.textMain,
+                                              ),
+                                            ),
+                                          ),
+                                          const SizedBox(width: 10),
+                                          Text(
+                                            '$passedCount/${lesson.sentences.length} câu đạt',
+                                            style: GoogleFonts.inter(
+                                              fontSize: 11,
+                                              fontWeight: FontWeight.w600,
+                                              color: NotionColors.textMuted,
+                                            ),
+                                          ),
+                                          const SizedBox(width: 4),
+                                          const Icon(
+                                            Icons.chevron_right_rounded,
+                                            size: 18,
+                                            color: NotionColors.textMuted,
+                                          ),
+                                        ],
                                       ),
                                     ],
                                   ),
                                 ),
-                                const SizedBox(width: 8),
-                                if (isDone)
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 8,
-                                      vertical: 3,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: NotionColors.tagGreenBg,
-                                      borderRadius: BorderRadius.circular(4),
-                                    ),
-                                    child: Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        const Icon(
-                                          Icons.check,
-                                          size: 12,
-                                          color: NotionColors.tagGreenText,
-                                        ),
-                                        const SizedBox(width: 4),
-                                        Text(
-                                          'Đạt',
-                                          style: GoogleFonts.inter(
-                                            fontSize: 11,
-                                            fontWeight: FontWeight.w600,
-                                            color: NotionColors.tagGreenText,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  )
-                                else
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 8,
-                                      vertical: 3,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: NotionColors.surfaceSubtle,
-                                      borderRadius: BorderRadius.circular(4),
-                                      border: Border.all(
-                                        color: NotionColors.borderSubtle,
-                                      ),
-                                    ),
-                                    child: Text(
-                                      '$passedCount/${lesson.sentences.length} câu đạt',
-                                      style: GoogleFonts.inter(
-                                        fontSize: 11,
-                                        color: NotionColors.textMuted,
-                                      ),
-                                    ),
-                                  ),
                               ],
                             ),
                           ),
@@ -782,13 +811,15 @@ class _CurriculumScreenState extends State<CurriculumScreen> {
                             children: [
                               const Text('💡', style: TextStyle(fontSize: 16)),
                               const SizedBox(width: 8),
-                              Text(
-                                'LÝ THUYẾT & SƠ ĐỒ KHẨU HÌNH CHUẨN',
-                                style: GoogleFonts.inter(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w700,
-                                  color: NotionColors.textMain,
-                                  letterSpacing: 0.6,
+                              Expanded(
+                                child: Text(
+                                  'LÝ THUYẾT & SƠ ĐỒ KHẨU HÌNH CHUẨN',
+                                  style: GoogleFonts.inter(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w700,
+                                    color: NotionColors.textMain,
+                                    letterSpacing: 0.6,
+                                  ),
                                 ),
                               ),
                             ],
@@ -891,29 +922,61 @@ class _CurriculumScreenState extends State<CurriculumScreen> {
                     const SizedBox(height: 20),
 
                     // 2. Fixed Sentences Practice List
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          'CÁC CÂU LUYỆN TẬP BẮT BUỘC (ĐẠT ≥ 80 ĐIỂM ĐỂ VƯỢT QUA)',
-                          style: GoogleFonts.inter(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w700,
-                            color: NotionColors.textMuted,
-                            letterSpacing: 0.8,
-                          ),
-                        ),
-                        Text(
-                          '${_selectedLesson!.sentences.where((s) => _passedSentenceIds.contains(s.id)).length}/${_selectedLesson!.sentences.length} Đã đạt',
-                          style: GoogleFonts.inter(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w600,
-                            color: NotionColors.textMuted,
-                          ),
-                        ),
-                      ],
+                    Builder(
+                      builder: (context) {
+                        final passedCount = _selectedLesson!.sentences
+                            .where((s) => _passedSentenceIds.contains(s.id))
+                            .length;
+                        final progress =
+                            passedCount / _selectedLesson!.sentences.length;
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    'Câu luyện tập',
+                                    style: GoogleFonts.inter(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w700,
+                                      color: NotionColors.textMain,
+                                    ),
+                                  ),
+                                ),
+                                Text(
+                                  '$passedCount/${_selectedLesson!.sentences.length} câu đạt',
+                                  style: GoogleFonts.inter(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                    color: NotionColors.textMuted,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              'Đạt ≥ 80/100 để hoàn thành từng câu.',
+                              style: GoogleFonts.inter(
+                                fontSize: 11,
+                                color: NotionColors.textMuted,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(4),
+                              child: LinearProgressIndicator(
+                                value: progress,
+                                minHeight: 5,
+                                backgroundColor: NotionColors.surfaceSubtle,
+                                color: NotionColors.textMain,
+                              ),
+                            ),
+                          ],
+                        );
+                      },
                     ),
-                    const SizedBox(height: 10),
+                    const SizedBox(height: 12),
 
                     ..._selectedLesson!.sentences.map((sent) {
                       final isPassed = _passedSentenceIds.contains(sent.id);
@@ -937,35 +1000,27 @@ class _CurriculumScreenState extends State<CurriculumScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Row(
+                            Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        sent.text,
-                                        style: GoogleFonts.inter(
-                                          fontSize: 15,
-                                          fontWeight: FontWeight.w600,
-                                          color: NotionColors.textMain,
-                                          height: 1.3,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 4),
-                                      Text(
-                                        sent.ipa,
-                                        style: GoogleFonts.robotoMono(
-                                          fontSize: 12,
-                                          color: NotionColors.textMuted,
-                                        ),
-                                      ),
-                                    ],
+                                Text(
+                                  sent.text,
+                                  style: GoogleFonts.inter(
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.w600,
+                                    color: NotionColors.textMain,
+                                    height: 1.3,
                                   ),
                                 ),
-                                const SizedBox(width: 8),
+                                const SizedBox(height: 4),
+                                Text(
+                                  sent.ipa,
+                                  style: GoogleFonts.robotoMono(
+                                    fontSize: 12,
+                                    color: NotionColors.textMuted,
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
                                 if (isPassed)
                                   Container(
                                     padding: const EdgeInsets.symmetric(
@@ -986,7 +1041,7 @@ class _CurriculumScreenState extends State<CurriculumScreen> {
                                         ),
                                         const SizedBox(width: 4),
                                         Text(
-                                          'Đạt (${bestScore.toStringAsFixed(0)}/100)',
+                                          'Đã đạt · ${bestScore.toStringAsFixed(0)}/100',
                                           style: GoogleFonts.inter(
                                             fontSize: 11,
                                             fontWeight: FontWeight.w700,
@@ -1007,7 +1062,7 @@ class _CurriculumScreenState extends State<CurriculumScreen> {
                                       borderRadius: BorderRadius.circular(4),
                                     ),
                                     child: Text(
-                                      'Cao nhất: ${bestScore.toStringAsFixed(0)}/100 (Cần ≥ 80)',
+                                      'Cần luyện · cao nhất ${bestScore.toStringAsFixed(0)}/100 (cần ≥ 80)',
                                       style: GoogleFonts.inter(
                                         fontSize: 11,
                                         fontWeight: FontWeight.w600,
@@ -1029,7 +1084,7 @@ class _CurriculumScreenState extends State<CurriculumScreen> {
                                       ),
                                     ),
                                     child: Text(
-                                      'Chưa luyện',
+                                      'Chưa luyện · chưa có điểm',
                                       style: GoogleFonts.inter(
                                         fontSize: 11,
                                         color: NotionColors.textMuted,
@@ -1039,8 +1094,11 @@ class _CurriculumScreenState extends State<CurriculumScreen> {
                               ],
                             ),
                             const SizedBox(height: 12),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            Wrap(
+                              alignment: WrapAlignment.spaceBetween,
+                              crossAxisAlignment: WrapCrossAlignment.center,
+                              spacing: 8,
+                              runSpacing: 8,
                               children: [
                                 Container(
                                   padding: const EdgeInsets.symmetric(
@@ -1094,7 +1152,7 @@ class _CurriculumScreenState extends State<CurriculumScreen> {
                                       isPassed
                                           ? 'Luyện Lại'
                                           : (hasAttempted
-                                                ? 'Luyện Tiếp Đến 80'
+                                                ? 'Luyện Tiếp'
                                                 : 'Bắt Đầu Luyện'),
                                       style: GoogleFonts.inter(
                                         fontSize: 12,
@@ -1134,49 +1192,62 @@ class _MouthDiagramFallback extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
       color: NotionColors.surfaceSubtle,
-      child: Row(
-        children: [
-          SizedBox(
-            width: 145,
-            height: 112,
-            child: CustomPaint(painter: _MouthDiagramPainter()),
-          ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: GoogleFonts.inter(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
-                    color: NotionColors.textMain,
-                  ),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final isCompact = constraints.maxWidth < 360;
+          return Row(
+            children: [
+              SizedBox(
+                width: isCompact ? 96 : 145,
+                height: 112,
+                child: CustomPaint(painter: _MouthDiagramPainter()),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: GoogleFonts.inter(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                        color: NotionColors.textMain,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      caption,
+                      maxLines: isCompact ? 3 : 4,
+                      overflow: TextOverflow.ellipsis,
+                      style: GoogleFonts.inter(
+                        fontSize: 10,
+                        color: NotionColors.textMuted,
+                        height: 1.35,
+                      ),
+                    ),
+                    if (!isCompact) ...[
+                      const SizedBox(height: 3),
+                      Text(
+                        'Minh hoạ thay thế khi ảnh trực tuyến không tải được',
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: GoogleFonts.inter(
+                          fontSize: 9,
+                          color: NotionColors.textMuted,
+                          fontStyle: FontStyle.italic,
+                        ),
+                      ),
+                    ],
+                  ],
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  caption,
-                  style: GoogleFonts.inter(
-                    fontSize: 10,
-                    color: NotionColors.textMuted,
-                    height: 1.35,
-                  ),
-                ),
-                const SizedBox(height: 3),
-                Text(
-                  'Minh hoạ thay thế khi ảnh trực tuyến không tải được',
-                  style: GoogleFonts.inter(
-                    fontSize: 9,
-                    color: NotionColors.textMuted,
-                    fontStyle: FontStyle.italic,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
+              ),
+            ],
+          );
+        },
       ),
     );
   }
